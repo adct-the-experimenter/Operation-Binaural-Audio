@@ -6,6 +6,7 @@ Item {
     id: item1
     width: 640
     height: 480
+    property alias loadButton: loadButton
     property alias hrtfTestButton: hrtfTestButton
     property alias x_pos_display: x_pos_display
     property alias y_pos_display: y_pos_display
@@ -15,8 +16,6 @@ Item {
     property alias playButton: playButton
     property alias moveDownButton: moveDownButton
     property alias moveUpButton: moveUpButton
-
-
 
     Text {
         id: x_pos_text
@@ -50,8 +49,7 @@ Item {
         text: display_position.yvalue
     }
 
-    RowLayout
-    {
+    RowLayout {
         id: row1
         anchors.verticalCenterOffset: 0
         anchors.horizontalCenterOffset: 0
@@ -69,6 +67,13 @@ Item {
             width: 60
             height: 20
             text: qsTr("Stop Sound")
+        }
+
+        Button {
+            id: loadButton
+            width: 60
+            height: 20
+            text: qsTr("Load Sound File")
         }
     }
 
@@ -132,7 +137,4 @@ Item {
         anchors.horizontalCenterOffset: 0
         anchors.horizontalCenter: row1.horizontalCenter
     }
-
-
-
 }
