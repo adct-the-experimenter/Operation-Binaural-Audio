@@ -8,7 +8,7 @@ ApplicationWindow
     visible: true
     width: 640
     height: 480
-    title: qsTr("QT Audio Engine Example")
+    title: qsTr("VAS Audio Application")
 
     //menu bar at top of main form
     menuBar: MenuBar
@@ -17,13 +17,23 @@ ApplicationWindow
             title: qsTr("File")
             MenuItem {
                 text: qsTr("&Open")
-                onTriggered: console.log("Open action triggered");
+                onTriggered:
+                {
+                    customFileDialog.mode = "OpenSoundFile";
+                    customFileDialog.open();
+                }
             }
             MenuItem {
                 text: qsTr("Exit")
                 onTriggered: Qt.quit();
             }
         }
+    }
+
+    //Object to help open files
+    CustomFileDialog
+    {
+        id:customFileDialog
     }
 
     //QTObject variable to display position
@@ -45,11 +55,16 @@ ApplicationWindow
 
     }
 
+    QtObject
+    {
+        id:sound_data
+        property string sound_filename: customFileDialog.sound_filepath
+    }
+
     //Message Dialog entity to display messages
     MessageDialog
     {
         id: messageDialog
-        title: qsTr("HRTF Test Results")
 
         function show(caption)
         {
@@ -113,8 +128,18 @@ ApplicationWindow
         hrtfTestButton.onClicked:
         {
             audioengine.qmlfunc_testHRTF() //perform test
+            messageDialog.title = "HRTF Test Output";
             messageDialog.show( audioengine.qml_string_HRTF_result()) //show result
             audioengine.qml_clear_HRTF_result() //clear result string
+        }
+
+        //if loadButton is pressed
+        loadButton.onClicked:
+        {
+            audioengine.qmlfunc_loadSound(sound_data.sound_filename); //load sound file to buffer
+            messageDialog.title = "Load Sound Output";
+            messageDialog.show(audioengine.qml_string_LoadSound_result()); //show result
+            audioengine.qml_string_LoadSound_result(); //clear result string
         }
     }
 

@@ -1,7 +1,6 @@
 #ifndef OPENALSOFTAUDIOENGINE_H
 #define OPENALSOFTAUDIOENGINE_H
 
-#include <SDL/SDL_sound.h>
 
 #include "AL/al.h" //header for OpenAL Soft
 #include "AL/alc.h" //header for OpenAL Soft
@@ -13,13 +12,12 @@
 #include <QtMath> //for qAtan, qSqrt
 #include <QDebug> //for qDebug
 
-#include <string.h>
+#include <QAudioDecoder>
+#include <QAudioBuffer>
+#include <QAudioOutput>
+#include <QFile>
 
-#include <iostream>
-#include <iomanip>
-#include <thread>
-#include <chrono>
-
+#include <cstdint>
 
 //class inherits from QQMLPropertValue
 class OpenAlSoftAudioEngine : public QObject, public QQmlPropertyValueSource
@@ -42,6 +40,7 @@ public:
 
     //function to initialize openAl Soft
     bool initOpenALSoft();
+
     //function to clean up openAL Soft initialization
     void close_openALSoft();
 
@@ -72,7 +71,19 @@ public:
     //function to clear testHRTF_Results from QML side
     Q_INVOKABLE void qml_clear_HRTF_result(){OpenAlSoftAudioEngine::clear_testHRTFResults();}
 
-//Play Sound
+//Sound Playback Related Functions
+    //function to take in file path to sound file and load buffer info to ALuint
+    void loadSound(const QString& filename);
+    //function to invoke from QML side, calls C++ function loadSound
+    Q_INVOKABLE void qmlfunc_loadSound(const QString& filename){OpenAlSoftAudioEngine::loadSound(filename);}
+
+    QString loadSound_Results; //string variable to write results of test to
+    //function to return testHRTF_Results string to QML side
+    Q_INVOKABLE QString qml_string_LoadSound_result(){return loadSound_Results;}
+    void clear_LoadSoundResults();
+    //function to clear testHRTF_Results from QML side
+    Q_INVOKABLE void qml_clear_LoadSound_result(){OpenAlSoftAudioEngine::clear_LoadSoundResults();}
+
     void playSound();
 
 //Q QML Property Interface
@@ -103,6 +114,13 @@ private:
     qreal listener_position_x; //x position
     qreal listener_position_y; //y position
     qreal listener_position_z; //z position
+
+    //buffer to play
+    ALuint m_buffer;
+
+    //error flag variable to test if there is error anywhere.
+    ALenum test_error_flag;
+    void error_check(QString location_str);
 };
 
 #endif // OPENALSOFTAUDIOENGINE_H
