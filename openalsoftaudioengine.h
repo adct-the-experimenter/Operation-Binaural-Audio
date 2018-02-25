@@ -40,6 +40,7 @@ public:
 
     //function to initialize openAl Soft
     bool initOpenALSoft();
+
     //function to clean up openAL Soft initialization
     void close_openALSoft();
 
@@ -116,6 +117,10 @@ private:
 
     //buffer to play
     ALuint m_buffer;
+
+    //error flag variable to test if there is error anywhere.
+    ALenum test_error_flag;
+    void error_check(QString location_str);
 };
 
 #endif // OPENALSOFTAUDIOENGINE_H

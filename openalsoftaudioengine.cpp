@@ -26,29 +26,63 @@ OpenAlSoftAudioEngine::~OpenAlSoftAudioEngine()
 bool OpenAlSoftAudioEngine::initOpenALSoft()
 {
     //function to initialize openal soft
-    bool success = true;
 
     //use default audio device
     gAudioDevice = alcOpenDevice(NULL);
-    if(gAudioDevice == nullptr){success = false;}
+    if(gAudioDevice == NULL)
+    {
+        qDebug() << "OpenAL Soft was unable to initialize! \n";
+        qDebug("Unable to initialize default audio device! \n");
+        return false;
+    }
 
     //create context
     alContext = alcCreateContext(gAudioDevice, NULL);
-    if(alContext == nullptr){success = false;}
+    if(alContext == NULL)
+    {
+        qDebug() << "OpenAL Soft was unable to initialize! \n";
+        qDebug("Unable to initialize OpenAL context! \n");
+        return false;
+    }
     else{alcMakeContextCurrent(alContext);}
+
+    /* Check if an error occured, and clean up if so. */
+    ALenum err; //variable for error flag
+    err = alGetError();
+    if(err != AL_NO_ERROR)
+    {
+        //fprintf(stderr, "OpenAL Error: %s\n", alGetString(err));
+        qDebug() << "OpenAL Soft was unable to initialize! \n";
+        qDebug("OpenAL Error in initializing OpenAL Soft: ");
+        qDebug(alGetString(err));
+        qDebug("\n");
+        return false;
+    }
 
     //define listener, what is hearing the sound
 
-    //For 2D sound, we tell openAL soft that listener
-    alListener3f(AL_POSITION, 0, 0, 0);//is at the origin
-    alListener3f(AL_VELOCITY, 0, 0, 0);//is not moving in 3d space
-    alListener3f(AL_ORIENTATION, 0, 0, -1);//Orientation is default
+    //Set Listener position
+    alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);//is at the origin
+    alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);//is not moving in 3d space
 
-    if(success){qDebug() << " Open AL Soft Initialized! \n";}
-    else{qDebug() << "OpenAL Soft was unable to initialize! \n";}
+    //Set Listener orientation
+    float vec[6];
+    //set to just facing the screen
 
-    return success;
+    //set where head is facing
+    vec[0] = 0.0f; //forward vector x value
+    vec[1] = 0.0f; //forward vector y value
+    vec[2] = -1.0f; //forward vector z value
+    //set where top of head surface vector
+    vec[3] = 0.0f; //up vector x value
+    vec[4] = 1.0f; //up vector y value
+    vec[5] = 0.0f; //up vector z value
 
+    //set current listener orientation
+    alListenerfv(AL_ORIENTATION, vec);
+
+    qDebug() << " Open AL Soft Initialized! \n";
+    return true;
 }
 
 void OpenAlSoftAudioEngine::close_openALSoft()
@@ -65,8 +99,8 @@ void OpenAlSoftAudioEngine::setListenerPositionX(qreal x)
     if(listener_position_x != x)
     {
         listener_position_x = x; //assign x to listener position x
-        emit listenerPositionXChanged(); //emit signal change for listener position x
         alListener3f(AL_POSITION, x, listener_position_y, listener_position_z);//change OpenAL Soft internal listener position
+        emit listenerPositionXChanged(); //emit signal change for listener position x
     }
 }
 
@@ -78,8 +112,8 @@ void OpenAlSoftAudioEngine::setListenerPositionY(qreal y)
     if(listener_position_y != y)
     {
         listener_position_y = y; //assign y to listener position y
-        emit listenerPositionYChanged(); //emit signal change for listener position y
         alListener3f(AL_POSITION, listener_position_x, y, listener_position_z);//change OpenAL Soft internal listener position
+        emit listenerPositionYChanged(); //emit signal change for listener position y
     }
 }
 
@@ -91,8 +125,8 @@ void OpenAlSoftAudioEngine::setListenerPositionZ(qreal z)
     if(listener_position_z != z)
     {
         listener_position_z = z; //assign z to listener position z
-        emit listenerPositionZChanged(); //emit signal change for listener position z
         alListener3f(AL_POSITION, listener_position_x, listener_position_y, z);//change OpenAL Soft internal listener position
+        emit listenerPositionZChanged(); //emit signal change for listener position z
     }
 }
 
@@ -209,11 +243,12 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
 {
     /*Code modified from Chris Robinson's OpenAL-Soft example for loading sound file.
       Uses QT_Multimedia QAudioDecoder .*/
-    ALuint buffer; //temporary variable to sture buffer
+    ALuint buffer; //temporary variable to store buffer
     ALenum err; //variable for error flag
     ALenum format; //ALenum variable for format of sound sample e.g. 8-bit 16-bit
-    uint32_t slen; //Size in bytes of the buffer data.
-	
+    ALsizei slen; //Size in bytes of the buffer data.
+    ALsizei frequency; //Sample rate of the buffer data
+
 	QAudioDecoder audioDecoder; //audio decoder to extract data from audio sample
     QAudioBuffer audioBufferRead; //variable  to store audio buffer that is read from audio decoder
 
@@ -224,7 +259,10 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
 		audioDecoder.setSourceFilename(filename); //input filename to audio decoder
         audioDecoder.start();
         while(!audioDecoder.bufferAvailable()){} //wait for buffer to be available for reading
-        if(audioDecoder.bufferAvailable()){audioBufferRead = audioDecoder.read();} //read buffer
+        if(audioDecoder.bufferAvailable())
+        {
+            audioBufferRead = audioDecoder.read();//read buffer
+        }
         if(!audioBufferRead.isValid())
         {
             loadSound_Results.append("The audio buffer read is not valid! \n");
@@ -238,7 +276,7 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
 		return;
 	}
 	
-	
+
     /* Get the sound format, and figure out the OpenAL format */
 
     //check for number of channels
@@ -261,7 +299,7 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
     else if(audioBufferRead.format().channelCount() == 2)
     {
 		//if audio sample format is 8-bit, set ALenum format variable to stereo 8-bit
-        if(audioBufferRead.format().sampleSize() == 8){format = AL_FORMAT_STEREO8;}
+        if(audioBufferRead.format().sampleSize() == 8){format = AL_FORMAT_STEREO8; }
 		//if audio sample format is 16-bit, set ALenum format variable to stereo 8-bit
         else if(audioBufferRead.format().sampleSize() == 16){format = AL_FORMAT_STEREO16;}
 		//else notify that sample format is unsupported         
@@ -283,6 +321,8 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
     /* Decode the whole audio stream to a buffer. */
     
     slen = audioBufferRead.byteCount(); //get size of data in bytes
+    qDebug() << "Duration of sound:" << audioBufferRead.duration() << "ms. \n";
+    qDebug() << "Size of data in bytes" << slen << "\n";
 	//if sample buffer is null or size of buffer data is zero, notify of error
     if(!audioBufferRead.isValid() || slen == 0)
     {
@@ -290,26 +330,45 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
         return;
     }
 
+    frequency = audioBufferRead.format().sampleRate();
+    qDebug() << "Sample Rate: " << frequency << "\n";
+
+    void *data = audioBufferRead.data();
+
     /* Buffer the audio data into a new buffer object, then free the data and
      * close the file. */
     buffer = 0; //initialize temp buffer
     alGenBuffers(1, &buffer);//request 1 buffer
 	//set buffer data
-    alBufferData(buffer, format, audioBufferRead.data(), slen, audioBufferRead.format().sampleRate() );
+    alBufferData(buffer, format, data, slen, frequency);
 
     /* Check if an error occured, and clean up if so. */
     err = alGetError();
     if(err != AL_NO_ERROR)
     {
         //fprintf(stderr, "OpenAL Error: %s\n", alGetString(err));
-		loadSound_Results.append("OpenAL Error: ");
+        loadSound_Results.append("OpenAL Error in loading sound: ");
 		loadSound_Results.append(alGetString(err));
 		loadSound_Results.append("\n");
         if(buffer && alIsBuffer(buffer)){alDeleteBuffers(1, &buffer);}
         return;
     }
-
+    loadSound_Results.append("Loaded "); loadSound_Results.append(filename); loadSound_Results.append(" successfully! \n");
     m_buffer = buffer; //assign temp buffer to m_buffer
+
+    return;
 }
 
 void OpenAlSoftAudioEngine::clear_LoadSoundResults(){loadSound_Results.clear();}
+
+void OpenAlSoftAudioEngine::error_check(QString location_str)
+{
+    /* Check if an error occured, and clean up if so. */
+    test_error_flag = alGetError();
+    if(test_error_flag != AL_NO_ERROR)
+    {
+        qDebug() << "Error found in " << location_str << ": " << alGetString(test_error_flag) << "\n";
+        return;
+    }
+
+}
