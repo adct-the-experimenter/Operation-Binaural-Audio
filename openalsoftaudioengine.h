@@ -18,6 +18,7 @@
 #include <QFile>
 
 #include <cstdint>
+#include <vector>
 
 //class inherits from QQMLPropertValue
 class OpenAlSoftAudioEngine : public QObject, public QQmlPropertyValueSource
@@ -33,6 +34,15 @@ class OpenAlSoftAudioEngine : public QObject, public QQmlPropertyValueSource
     //property of listener's z position
     Q_PROPERTY(qreal listener_pos_z READ getListenerPositionZ WRITE setListenerPositionZ NOTIFY listenerPositionZChanged)
 
+    //property of listener's orientation
+    //property of listener's face vector
+    Q_PROPERTY(qreal listener_forw_x READ getListenerForwardX WRITE setListenerForwardX NOTIFY listenerForwardXChanged)
+    Q_PROPERTY(qreal listener_forw_y READ getListenerForwardY WRITE setListenerForwardY NOTIFY listenerForwardYChanged)
+    Q_PROPERTY(qreal listener_forw_z READ getListenerForwardZ WRITE setListenerForwardZ NOTIFY listenerForwardZChanged)
+    //property of listener's up vector
+    Q_PROPERTY(qreal listener_upvec_x READ getListenerUpX WRITE setListenerUpX NOTIFY listenerUpXChanged)
+    Q_PROPERTY(qreal listener_upvec_y READ getListenerUpY WRITE setListenerUpY NOTIFY listenerUpYChanged)
+    Q_PROPERTY(qreal listener_upvec_z READ getListenerUpZ WRITE setListenerUpZ NOTIFY listenerUpZChanged)
 public:
 
     OpenAlSoftAudioEngine(QObject* parent = nullptr);
@@ -48,13 +58,24 @@ public:
 
     void setListenerPositionX(qreal x); //set x position of listener
     qreal getListenerPositionX(); //get x position of listener
-
     void setListenerPositionY(qreal y); //set y position of listener
     qreal getListenerPositionY(); //get y position of listener
-
     void setListenerPositionZ(qreal z); //set z position of listener
     qreal getListenerPositionZ(); //get z position of listener
+//Listener Orientation Functions
+    void setListenerForwardX(qreal x); //set x of forward of listener
+    qreal getListenerForwardX(); //get x of forward of listener
+    void setListenerForwardY(qreal y); //set y of forward of listener
+    qreal getListenerForwardY(); //get y of forward of listener
+    void setListenerForwardZ(qreal z); //set z of forward of listener
+    qreal getListenerForwardZ(); //get z of forward listener
 
+    void setListenerUpX(qreal x); //set x of up of listener
+    qreal getListenerUpX(); //get x of up of listener
+    void setListenerUpY(qreal y); //set y of up of listener
+    qreal getListenerUpY(); //get y of up of listener
+    void setListenerUpZ(qreal z); //set z of up of listener
+    qreal getListenerUpZ(); //get z of up of listener
 //HRTF
 
     //function to perform tests for HRTF support
@@ -99,6 +120,14 @@ signals:
     void listenerPositionYChanged(); //notifies listener y position change
     void listenerPositionZChanged(); //notifies listener z position change
 
+    void listenerForwardXChanged(); //notifies listener forward x change
+    void listenerForwardYChanged(); //notifies listener forward y change
+    void listenerForwardZChanged(); //notifies listener forward z change
+
+    void listenerUpXChanged(); //notifies listener up x change
+    void listenerUpYChanged(); //notifies listener up y change
+    void listenerUpZChanged(); //notifies listener up z change
+
 //Functions to react to changes in variables
 private slots:
 
@@ -111,9 +140,15 @@ private:
     ALCcontext* alContext; //context of where audio is played
 
     //position of Listener
-    qreal listener_position_x; //x position
-    qreal listener_position_y; //y position
-    qreal listener_position_z; //z position
+    std::vector <float> listener_position_vector;
+    enum POSITION_INDEX { X=0,Y=1,Z=2 };
+
+    //orientation of Listener
+    std::vector<float> listener_orientation_vector; //vector to hold values of listener orientation
+    //first 3 values are forward vector xyz , last 3 values are up vector xyz
+    //enum to help set orientation vector
+    enum ORIENTATION_INDEX { FORWARD_X=0,FORWARD_Y=1,FORWARD_Z=2,
+                                                 UP_X=3, UP_Y=4, UP_Z=5 };
 
     //buffer to play
     ALuint m_buffer;

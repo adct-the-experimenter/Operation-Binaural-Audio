@@ -7,10 +7,10 @@ OpenAlSoftAudioEngine::OpenAlSoftAudioEngine(QObject *parent)
     alContext = nullptr;
 
     //initialize listener position
-    listener_position_x = 0;
-    listener_position_y = 0;
-    listener_position_z = 0;
+    listener_position_vector.resize(3);
 
+    //initialize listener orientation
+    listener_orientation_vector.resize(6);
     OpenAlSoftAudioEngine::initOpenALSoft();
 
     //clear testHRTF Results string
@@ -59,7 +59,7 @@ bool OpenAlSoftAudioEngine::initOpenALSoft()
         return false;
     }
 
-    //define listener, what is hearing the sound
+    //define listener, what is hearing the sound, with initial values
 
     //Set Listener position
     alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);//is at the origin
@@ -96,46 +96,127 @@ void OpenAlSoftAudioEngine::close_openALSoft()
 void OpenAlSoftAudioEngine::setListenerPositionX(qreal x)
 {
     //if x is different from listener position x
-    if(listener_position_x != x)
+    if(listener_position_vector[POSITION_INDEX::X] != x)
     {
-        listener_position_x = x; //assign x to listener position x
-        alListener3f(AL_POSITION, x, listener_position_y, listener_position_z);//change OpenAL Soft internal listener position
-        emit listenerPositionXChanged(); //emit signal change for listener position x
+        listener_position_vector[POSITION_INDEX::X] = x; //assign z to listener position z
+        alListener3f(AL_POSITION, listener_position_vector[POSITION_INDEX::X], listener_position_vector[POSITION_INDEX::Y], listener_position_vector[POSITION_INDEX::Z]);//change OpenAL Soft internal listener position
+        emit listenerPositionXChanged(); //emit signal change for listener position z
     }
 }
 
-qreal OpenAlSoftAudioEngine::getListenerPositionX(){return listener_position_x;}
+qreal OpenAlSoftAudioEngine::getListenerPositionX(){return listener_position_vector[POSITION_INDEX::X];}
 
 void OpenAlSoftAudioEngine::setListenerPositionY(qreal y)
 {
     //if y is different from listener position y
-    if(listener_position_y != y)
+    if(listener_position_vector[POSITION_INDEX::Y] != y)
     {
-        listener_position_y = y; //assign y to listener position y
-        alListener3f(AL_POSITION, listener_position_x, y, listener_position_z);//change OpenAL Soft internal listener position
+        listener_position_vector[POSITION_INDEX::Y] = y; //assign z to listener position y
+        alListener3f(AL_POSITION, listener_position_vector[POSITION_INDEX::X], listener_position_vector[POSITION_INDEX::Y], listener_position_vector[POSITION_INDEX::Z]);//change OpenAL Soft internal listener position
         emit listenerPositionYChanged(); //emit signal change for listener position y
     }
 }
 
-qreal OpenAlSoftAudioEngine::getListenerPositionY(){return listener_position_y;}
+qreal OpenAlSoftAudioEngine::getListenerPositionY(){return listener_position_vector[POSITION_INDEX::Y];}
 
 void OpenAlSoftAudioEngine::setListenerPositionZ(qreal z)
 {
     //if z is different from listener position z
-    if(listener_position_z != z)
+    if(listener_position_vector[POSITION_INDEX::Z] != z)
     {
-        listener_position_z = z; //assign z to listener position z
-        alListener3f(AL_POSITION, listener_position_x, listener_position_y, z);//change OpenAL Soft internal listener position
+        listener_position_vector[POSITION_INDEX::Z] = z; //assign z to listener position z
+        alListener3f(AL_POSITION, listener_position_vector[POSITION_INDEX::X], listener_position_vector[POSITION_INDEX::Y], listener_position_vector[POSITION_INDEX::Z]);//change OpenAL Soft internal listener position
         emit listenerPositionZChanged(); //emit signal change for listener position z
     }
 }
 
-qreal OpenAlSoftAudioEngine::getListenerPositionZ(){return listener_position_z;}
+qreal OpenAlSoftAudioEngine::getListenerPositionZ(){return listener_position_vector[POSITION_INDEX::Z];}
+
+//Listener Orientation Functions
+
+void OpenAlSoftAudioEngine::setListenerForwardX(qreal x)
+{
+    //if x is different from listener Forward x
+    if(listener_orientation_vector[ORIENTATION_INDEX::FORWARD_X] != x)
+    {
+        listener_orientation_vector[ORIENTATION_INDEX::FORWARD_X] = x;
+        alListenerfv(AL_ORIENTATION, listener_orientation_vector.data());//change OpenAL Soft internal listener orientation
+        emit listenerForwardXChanged(); //emit signal change for listener position x
+    }
+}
+
+qreal OpenAlSoftAudioEngine::getListenerForwardX(){return listener_orientation_vector[ORIENTATION_INDEX::FORWARD_X];}
+
+void OpenAlSoftAudioEngine::setListenerForwardY(qreal y)
+{
+    //if y is different from listener Forward x
+    if(listener_orientation_vector[ORIENTATION_INDEX::FORWARD_Y] != y)
+    {
+        listener_orientation_vector[ORIENTATION_INDEX::FORWARD_Y] = y;
+        alListenerfv(AL_ORIENTATION, listener_orientation_vector.data());//change OpenAL Soft internal listener orientation
+        emit listenerForwardYChanged(); //emit signal change for listener position x
+    }
+}
+
+qreal OpenAlSoftAudioEngine::getListenerForwardY(){return listener_orientation_vector[ORIENTATION_INDEX::FORWARD_Y];}
+
+void OpenAlSoftAudioEngine::setListenerForwardZ(qreal z)
+{
+    //if z is different from listener Forward z
+    if(listener_orientation_vector[ORIENTATION_INDEX::FORWARD_Z] != z)
+    {
+        listener_orientation_vector[ORIENTATION_INDEX::FORWARD_Z] = z;
+        alListenerfv(AL_ORIENTATION, listener_orientation_vector.data());//change OpenAL Soft internal listener orientation
+        emit listenerForwardZChanged(); //emit signal change for listener position x
+    }
+}
+
+qreal OpenAlSoftAudioEngine::getListenerForwardZ(){return listener_orientation_vector[ORIENTATION_INDEX::FORWARD_Z];}
+
+void OpenAlSoftAudioEngine::setListenerUpX(qreal x)
+{
+    //if x is different from listener Forward x
+    if(listener_orientation_vector[ORIENTATION_INDEX::UP_X] != x)
+    {
+        listener_orientation_vector[ORIENTATION_INDEX::UP_X] = x;
+        alListenerfv(AL_ORIENTATION, listener_orientation_vector.data());//change OpenAL Soft internal listener orientation
+        emit listenerUpXChanged(); //emit signal change for listener position x
+    }
+}
+
+qreal OpenAlSoftAudioEngine::getListenerUpX(){return listener_orientation_vector[ORIENTATION_INDEX::UP_X];}
+
+void OpenAlSoftAudioEngine::setListenerUpY(qreal y)
+{
+    //if y is different from listener Forward x
+    if(listener_orientation_vector[ORIENTATION_INDEX::UP_Y] != y)
+    {
+        listener_orientation_vector[ORIENTATION_INDEX::UP_Y] = y;
+        alListenerfv(AL_ORIENTATION, listener_orientation_vector.data());//change OpenAL Soft internal listener orientation
+        emit listenerUpYChanged(); //emit signal change for listener position x
+    }
+}
+
+qreal OpenAlSoftAudioEngine::getListenerUpY(){return listener_orientation_vector[ORIENTATION_INDEX::UP_Y];}
+
+void OpenAlSoftAudioEngine::setListenerUpZ(qreal z)
+{
+    //if z is different from listener Forward z
+    if(listener_orientation_vector[ORIENTATION_INDEX::UP_Z] != z)
+    {
+        listener_orientation_vector[ORIENTATION_INDEX::UP_Z] = z;
+        alListenerfv(AL_ORIENTATION, listener_orientation_vector.data());//change OpenAL Soft internal listener orientation
+        emit listenerUpZChanged(); //emit signal change for listener position x
+    }
+}
+
+qreal OpenAlSoftAudioEngine::getListenerUpZ(){return listener_orientation_vector[ORIENTATION_INDEX::UP_Z];}
 
 //HRTF
 //define functions for hrtf
 static LPALCGETSTRINGISOFT alcGetStringiSOFT;
 static LPALCRESETDEVICESOFT alcResetDeviceSOFT;
+
 
 void OpenAlSoftAudioEngine::testHRTF()
 {
