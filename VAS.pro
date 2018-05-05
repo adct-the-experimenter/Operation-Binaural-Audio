@@ -2,7 +2,7 @@ TEMPLATE = app
 
 QT += qml quick multimedia
 
-CONFIG += c++11
+CONFIG += c++11 g
 
 SOURCES += main.cpp \
     openalsoftaudioengine.cpp
@@ -19,7 +19,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += openalsoftaudioengine.h
 
-LIBS += -L/usr/local/lib -lopenal
+LIBS += -L/usr/local/lib -lopenal -lsndfile
 
 INCLUDEPATH += $$_PRO_FILE_PWD_/include
 DEPENDPATH += $$_PRO_FILE_PWD_/include

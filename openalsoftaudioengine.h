@@ -6,6 +6,8 @@
 #include "AL/alc.h" //header for OpenAL Soft
 #include "AL/alext.h" //header for OpenAL Soft
 
+#include "sndfile.h"
+
 #include <QQmlPropertyValueSource>
 #include <QQmlProperty> //For QML property
 #include <QObject> //for QObject definition
@@ -16,9 +18,19 @@
 #include <QAudioBuffer>
 #include <QAudioOutput>
 #include <QFile>
+#include <QMediaPlayer>
 
 #include <cstdint>
 #include <vector>
+
+/*	This will be the length of the buffer used to hold frames while
+**	we process them.
+*/
+#define		BUFFER_LEN	1024
+
+/* libsndfile can handle more than 6 channels but we'll restrict it to 2. */
+#define		MAX_CHANNELS	2
+
 
 //class inherits from QQMLPropertValue
 class OpenAlSoftAudioEngine : public QObject, public QQmlPropertyValueSource
@@ -153,7 +165,10 @@ private:
     //buffer to play
     ALuint m_buffer;
 
-    //error flag variable to test if there is error anywhere.
+    //libsndfile file handle for input file
+    SNDFILE	*infile;
+
+    //error flag variable to test if there is error anywhere regarding OpenAL Soft.
     ALenum test_error_flag;
     void error_check(QString location_str);
 };
