@@ -54,14 +54,14 @@ bool OpenAlSoftAudioEngine::initOpenALSoft()
         //fprintf(stderr, "OpenAL Error: %s\n", alGetString(err));
         qDebug() << "OpenAL Soft was unable to initialize! \n";
         qDebug("OpenAL Error in initializing OpenAL Soft: ");
-        qDebug(alGetString(err));
+        qDebug() << alGetString(err);
         qDebug("\n");
         return false;
     }
 
     //define listener, what is hearing the sound, with initial values
 
-    //Set Listener position
+    //Initialize Listener position
     alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);//is at the origin
     alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);//is not moving in 3d space
 
@@ -330,26 +330,142 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
     ALsizei slen; //Size in bytes of the buffer data.
     ALsizei frequency; //Sample rate of the buffer data
 
-	QAudioDecoder audioDecoder; //audio decoder to extract data from audio sample
-    QAudioBuffer audioBufferRead; //variable  to store audio buffer that is read from audio decoder
+    //QAudioDecoder audioDecoder; //audio decoder to extract data from audio sample
+    //QVector <QAudioBuffer> audioBufferRead; //variable  to store audio buffer that is read from audio decoder
 
     /* Open the audio file */
     //Check if file exists
 	if(QFile::exists(filename))
 	{
-		audioDecoder.setSourceFilename(filename); //input filename to audio decoder
-        audioDecoder.start();
-        while(!audioDecoder.bufferAvailable()){} //wait for buffer to be available for reading
-        if(audioDecoder.bufferAvailable())
+        //libsndfile code below adapted from sfprocess.c of libsndfile example on github.
+
+
+        /* A pointer to an SF_INFO struct is passed to sf_open.
+        ** On read, the library fills this struct with information about the file.
+        */
+        SF_INFO	sfinfo;
+        const char	*infilename = filename.toStdString().c_str();
+
+        /* The SF_INFO struct must be initialized before using it.
+        */
+        memset (&sfinfo, 0, sizeof (sfinfo)) ;
+
+        /* Here's where we open the input file. We pass sf_open the file name and
+        ** a pointer to an SF_INFO struct.
+        ** On successful open, sf_open returns a SNDFILE* pointer which is used
+        ** for all subsequent operations on that file.
+        ** If an error occurs during sf_open, the function returns a NULL pointer.
+        **
+        */
+
+        if (! (infile = sf_open (infilename, SFM_READ, &sfinfo)))
         {
-            audioBufferRead = audioDecoder.read();//read buffer
-        }
-        if(!audioBufferRead.isValid())
-        {
-            loadSound_Results.append("The audio buffer read is not valid! \n");
-            loadSound_Results.append(audioDecoder.errorString());
+            /* Open failed so print an error message. */
+            loadSound_Results.append("Not able to open input file "); loadSound_Results.append(infilename); loadSound_Results.append(".\n");
+            /* Print the error message from libsndfile. */
+            loadSound_Results.append(sf_strerror (NULL)) ;
+            return;
+         }
+
+        if (sfinfo.channels > MAX_CHANNELS)
+        {	loadSound_Results.append("Not able to process more than "); loadSound_Results.append(MAX_CHANNELS); loadSound_Results.append("%d channels.\n");
             return;
         }
+
+        /* Get the sound format, and figure out the OpenAL format */
+
+        //check for number of channels
+        //if audio sample has only 1 channel
+        if(sfinfo.channels == 1)
+        {
+            //if audio sample format is 8-bit, set ALenum format variable to mono 8-bit
+            if( (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_S8 ||
+                    (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_U8){format = AL_FORMAT_MONO8;}
+            //if audio sample format is 16-bit, set ALenum format variable to mono 8-bit
+            else if( (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_16){format = AL_FORMAT_MONO16;}
+            //else notify that sample format is unsupported
+            else
+            {
+                loadSound_Results.append("Unsupported sample format for mono. Must be 8-bit or 16-bit");
+                return;
+            }
+
+        }
+        //else if audio sample has 2 channels
+        else if(sfinfo.channels == 2)
+        {
+            //if audio sample format is 8-bit, set ALenum format variable to stereo 8-bit
+            if( (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_S8 ||
+                (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_U8){format = AL_FORMAT_STEREO8; }
+            //if audio sample format is 16-bit, set ALenum format variable to stereo 8-bit
+            else if( (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_16){format = AL_FORMAT_STEREO16;}
+            //else notify that sample format is unsupported
+            else
+            {
+                loadSound_Results.append("Unsupported sample format for stereo. Must be 8-bit or 16-bit.");
+                return;
+            }
+
+        }
+        //else notify that channel count is unsupported
+        else
+        {
+            loadSound_Results.append("Unsupported channel count. Must be 1 or 2 channels.\n");
+            return;
+        }
+
+        /* Decode the whole audio stream to a buffer. */
+
+        frequency = sfinfo.samplerate;
+        qDebug() << "Sample Rate: " << frequency << "\n";
+
+        //setup data for buffer
+        std::vector<uint16_t> data;
+        std::vector<int16_t> read_buf(BUFFER_LEN);
+        size_t read_size = 0;
+        while((read_size = sf_read_short(infile, read_buf.data(), read_buf.size())) != 0)
+        {
+            data.insert(data.end(), read_buf.begin(), read_buf.begin() + read_size);
+        }
+
+        slen = data.size() * sizeof(uint16_t); //get size of data in bytes
+
+        qDebug() << "Size of data in bytes" << slen << "\n";
+        //if sample buffer is null or size of buffer data is zero, notify of error
+        if(slen == 0)
+        {
+            loadSound_Results.append("Failed to read audio from file.\n");
+            return;
+        }
+
+        double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
+        qDebug() << "Duration of sound:" << seconds << "s. \n";
+
+        /* Buffer the audio data into a new buffer object, then free the data and
+         * close the file. */
+        buffer = 0; //initialize temp buffer
+        alGenBuffers(1, &buffer);//request 1 buffer
+        //set buffer data
+        //alBufferData(buffer, format, data, slen, frequency);
+        alBufferData(buffer, format,&data.front(), data.size() * sizeof(uint16_t), sfinfo.samplerate);
+
+        /* Check if an error occured, and clean up if so. */
+        err = alGetError();
+        if(err != AL_NO_ERROR)
+        {
+            //fprintf(stderr, "OpenAL Error: %s\n", alGetString(err));
+            loadSound_Results.append("OpenAL Error in loading sound: ");
+            loadSound_Results.append(alGetString(err));
+            loadSound_Results.append("\n");
+            if(buffer && alIsBuffer(buffer)){alDeleteBuffers(1, &buffer);}
+            return;
+        }
+        loadSound_Results.append("Loaded "); loadSound_Results.append(filename); loadSound_Results.append(" successfully! \n");
+        m_buffer = buffer; //assign temp buffer to m_buffer
+
+        /* Close input files. */
+        sf_close (infile);
+        return;
 	}
 	else
 	{
@@ -358,86 +474,7 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
 	}
 	
 
-    /* Get the sound format, and figure out the OpenAL format */
 
-    //check for number of channels
-    //if audio sample has only 1 channel
-    if(audioBufferRead.format().channelCount() == 1)
-    {
-		//if audio sample format is 8-bit, set ALenum format variable to mono 8-bit
-        if(audioBufferRead.format().sampleSize() == 8){format = AL_FORMAT_MONO8;}
-        //if audio sample format is 16-bit, set ALenum format variable to mono 8-bit
-        else if(audioBufferRead.format().sampleSize() == 16){format = AL_FORMAT_MONO16;}
-		//else notify that sample format is unsupported        
-		else
-        {
-            //fprintf(stderr, "Unsupported sample format: 0x%04x\n", sample->actual.format);
-			loadSound_Results.append("Unsupported sample format for mono. Must be 8-bit or 16-bit");
-			return;
-        }
-    }
-    //else if audio sample has 2 channels
-    else if(audioBufferRead.format().channelCount() == 2)
-    {
-		//if audio sample format is 8-bit, set ALenum format variable to stereo 8-bit
-        if(audioBufferRead.format().sampleSize() == 8){format = AL_FORMAT_STEREO8; }
-		//if audio sample format is 16-bit, set ALenum format variable to stereo 8-bit
-        else if(audioBufferRead.format().sampleSize() == 16){format = AL_FORMAT_STEREO16;}
-		//else notify that sample format is unsupported         
-		else
-        {
-            //fprintf(stderr, "Unsupported sample format: 0x%04x\n", sample->actual.format);
-			loadSound_Results.append("Unsupported sample format for stereo. Must be 8-bit or 16-bit.");            
-            return;
-        }
-    }
-	//else notify that channel count is unsupported 
-    else
-    {
-        //fprintf(stderr, "Unsupported channel count: %d\n", sample->actual.channels);
-        loadSound_Results.append("Unsupported channel count. Must be 1 or 2 channels.\n");
-        return;
-    }
-
-    /* Decode the whole audio stream to a buffer. */
-    
-    slen = audioBufferRead.byteCount(); //get size of data in bytes
-    qDebug() << "Duration of sound:" << audioBufferRead.duration() << "ms. \n";
-    qDebug() << "Size of data in bytes" << slen << "\n";
-	//if sample buffer is null or size of buffer data is zero, notify of error
-    if(!audioBufferRead.isValid() || slen == 0)
-    {
-        loadSound_Results.append("Failed to read audio from file.\n");
-        return;
-    }
-
-    frequency = audioBufferRead.format().sampleRate();
-    qDebug() << "Sample Rate: " << frequency << "\n";
-
-    void *data = audioBufferRead.data();
-
-    /* Buffer the audio data into a new buffer object, then free the data and
-     * close the file. */
-    buffer = 0; //initialize temp buffer
-    alGenBuffers(1, &buffer);//request 1 buffer
-	//set buffer data
-    alBufferData(buffer, format, data, slen, frequency);
-
-    /* Check if an error occured, and clean up if so. */
-    err = alGetError();
-    if(err != AL_NO_ERROR)
-    {
-        //fprintf(stderr, "OpenAL Error: %s\n", alGetString(err));
-        loadSound_Results.append("OpenAL Error in loading sound: ");
-		loadSound_Results.append(alGetString(err));
-		loadSound_Results.append("\n");
-        if(buffer && alIsBuffer(buffer)){alDeleteBuffers(1, &buffer);}
-        return;
-    }
-    loadSound_Results.append("Loaded "); loadSound_Results.append(filename); loadSound_Results.append(" successfully! \n");
-    m_buffer = buffer; //assign temp buffer to m_buffer
-
-    return;
 }
 
 void OpenAlSoftAudioEngine::clear_LoadSoundResults(){loadSound_Results.clear();}
@@ -451,5 +488,4 @@ void OpenAlSoftAudioEngine::error_check(QString location_str)
         qDebug() << "Error found in " << location_str << ": " << alGetString(test_error_flag) << "\n";
         return;
     }
-
 }
