@@ -6,6 +6,10 @@
 #include "AL/alc.h" //header for OpenAL Soft
 #include "AL/alext.h" //header for OpenAL Soft
 
+#ifdef Q_OS_WIN
+#include <windows.h> // for Sleep
+#endif
+
 #include "sndfile.h"
 
 #include <QQmlPropertyValueSource>
@@ -14,14 +18,12 @@
 #include <QtMath> //for qAtan, qSqrt
 #include <QDebug> //for qDebug
 
-#include <QAudioDecoder>
-#include <QAudioBuffer>
-#include <QAudioOutput>
+
 #include <QFile>
-#include <QMediaPlayer>
 
 #include <cstdint>
 #include <vector>
+#include <map>
 
 /*	This will be the length of the buffer used to hold frames while
 **	we process them.
@@ -38,6 +40,7 @@ class OpenAlSoftAudioEngine : public QObject, public QQmlPropertyValueSource
     Q_OBJECT
     //for setting property value to be read in qml
     Q_INTERFACES(QQmlPropertyValueSource)
+
     //value name qml, READ value to read, WRITE function to set value, NOTIFY signal function
     //property of listener's x position
     Q_PROPERTY(qreal listener_pos_x READ getListenerPositionX WRITE setListenerPositionX NOTIFY listenerPositionXChanged)
@@ -66,7 +69,7 @@ public:
     //function to clean up openAL Soft initialization
     void close_openALSoft();
 
-//Listener Position Functions
+//Listener Position Functions, functions for moving listener position
 
     void setListenerPositionX(qreal x); //set x position of listener
     qreal getListenerPositionX(); //get x position of listener
@@ -74,7 +77,9 @@ public:
     qreal getListenerPositionY(); //get y position of listener
     void setListenerPositionZ(qreal z); //set z position of listener
     qreal getListenerPositionZ(); //get z position of listener
-//Listener Orientation Functions
+
+//Listener Orientation Functions, functions for moving listener head up,down,left,right
+
     void setListenerForwardX(qreal x); //set x of forward of listener
     qreal getListenerForwardX(); //get x of forward of listener
     void setListenerForwardY(qreal y); //set y of forward of listener
@@ -88,6 +93,26 @@ public:
     qreal getListenerUpY(); //get y of up of listener
     void setListenerUpZ(qreal z); //set z of up of listener
     qreal getListenerUpZ(); //get z of up of listener
+
+//Audio Source functions, functions for creating object that make sound and moving these objects
+    struct AudioSourceInfo
+    {
+        QString name; //name of source object
+        ALuint source; //what holds info of source object
+        ALuint genIndex; //id for alGenBuffers
+        std::vector <float> position_vector;
+    };
+
+    void createAudioSource(QString &source_name);
+    void bindBufferToAudioSource(QString &source_name, ALuint buffer);
+
+    void setAudioSourcePositionX(QString &source_name,qreal x); //set x position of listener
+    qreal getAudioSourcePositionX(QString &source_name); //get x position of listener
+    void setAudioSourcePositionY(QString &source_name,qreal y); //set y position of listener
+    qreal getAudioSourcePositionY(QString &source_name); //get y position of listener
+    void setAudioSourcePositionZ(QString &source_name,qreal z); //set z position of listener
+    qreal getAudioSourcePositionZ(QString &source_name); //get z position of listener
+
 //HRTF
 
     //function to perform tests for HRTF support
@@ -117,7 +142,14 @@ public:
     //function to clear testHRTF_Results from QML side
     Q_INVOKABLE void qml_clear_LoadSound_result(){OpenAlSoftAudioEngine::clear_LoadSoundResults();}
 
+    //function to play sound from a buffer already loaded from using loadSound(filename)
     void playSound();
+
+    void playSoundSource(QString& source_name);
+
+    //cleanup functions
+    void deleteSound();
+    void deleteSource(QString &source_name);
 
 //Q QML Property Interface
     virtual void setTarget(const QQmlProperty &prop);
@@ -144,7 +176,7 @@ signals:
 private slots:
 
 private:
-    //for q properties
+    //for qml properties
     QQmlProperty m_targetProperty;
 
     //OpenAL Soft sound setup variables
@@ -162,15 +194,20 @@ private:
     enum ORIENTATION_INDEX { FORWARD_X=0,FORWARD_Y=1,FORWARD_Z=2,
                                                  UP_X=3, UP_Y=4, UP_Z=5 };
 
-    //buffer to play
-    ALuint m_buffer;
+    //Vector to contain audio sources
+    std::vector <AudioSourceInfo> m_sources;
 
+    //Vector to contain buffers to play
+    std::vector <ALuint> m_buffers;
+
+    //registry of audio sources
+    std::map <QString, AudioSourceInfo*> reg_audio_sources;
     //libsndfile file handle for input file
     SNDFILE	*infile;
 
     //error flag variable to test if there is error anywhere regarding OpenAL Soft.
     ALenum test_error_flag;
-    void error_check(QString location_str);
+    void openal_error_check(QString location_str);
 };
 
 #endif // OPENALSOFTAUDIOENGINE_H

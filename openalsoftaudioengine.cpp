@@ -20,6 +20,8 @@ OpenAlSoftAudioEngine::OpenAlSoftAudioEngine(QObject *parent)
 
 OpenAlSoftAudioEngine::~OpenAlSoftAudioEngine()
 {
+    m_sources.clear();
+    m_buffers.clear();
     OpenAlSoftAudioEngine::close_openALSoft();
 }
 
@@ -212,6 +214,100 @@ void OpenAlSoftAudioEngine::setListenerUpZ(qreal z)
 
 qreal OpenAlSoftAudioEngine::getListenerUpZ(){return listener_orientation_vector[ORIENTATION_INDEX::UP_Z];}
 
+//Audio Source Functions
+
+void OpenAlSoftAudioEngine::createAudioSource(QString& source_name)
+{
+
+    AudioSourceInfo sourceInfo;
+    sourceInfo.name = source_name;
+
+    //add source info to sources vector
+    m_sources.push_back(sourceInfo);
+    //assign index of last element in sources vector to genIndex of newly added source info element
+    m_sources.end()->genIndex = m_sources.size()-1;
+    reg_audio_sources.insert(std::pair <QString,AudioSourceInfo*>(m_sources.back().name,&m_sources.back() ) );
+
+    alGenSources(m_sources.end()->genIndex, &m_sources.back().source);
+    // check for errors
+    OpenAlSoftAudioEngine::openal_error_check("In create Audio Source.");
+    //By default, pitch and gain are 1, at origin, non-moving, not looping sound.
+    alSourcef(m_sources.back().source, AL_PITCH, 1);
+    alSourcef(m_sources.back().source, AL_GAIN, 1);
+    alSource3f(m_sources.back().source, AL_POSITION, 0, 0, 0);
+    alSource3f(m_sources.back().source, AL_VELOCITY, 0, 0, 0);
+    alSourcei(m_sources.back().source, AL_LOOPING, AL_FALSE);
+
+}
+
+void OpenAlSoftAudioEngine::bindBufferToAudioSource(QString &source_name,ALuint buffer)
+{
+    AudioSourceInfo* sourceInfoPtr = reg_audio_sources.at(source_name);
+
+    alSourcei(sourceInfoPtr->source, AL_BUFFER, buffer);
+    // check for errors
+}
+
+void OpenAlSoftAudioEngine::setAudioSourcePositionX(QString &source_name, qreal x)
+{
+    AudioSourceInfo* sourceInfoPtr = reg_audio_sources.at(source_name);
+
+    //if x is different from current audio source position x
+    if(sourceInfoPtr->position_vector[POSITION_INDEX::X] != x)
+    {
+        sourceInfoPtr->position_vector[POSITION_INDEX::X] = x; //assign x to listener position x
+        alSource3f(sourceInfoPtr->source, AL_POSITION, sourceInfoPtr->position_vector[POSITION_INDEX::X],
+                                                           sourceInfoPtr->position_vector[POSITION_INDEX::Y],
+                                                        sourceInfoPtr->position_vector[POSITION_INDEX::Z]);
+    }
+}
+
+qreal OpenAlSoftAudioEngine::getAudioSourcePositionX(QString &source_name)
+{
+    AudioSourceInfo* sourceInfoPtr = reg_audio_sources.at(source_name);
+    return sourceInfoPtr->position_vector[POSITION_INDEX::X];
+}
+
+void OpenAlSoftAudioEngine::setAudioSourcePositionY(QString &source_name, qreal y)
+{
+    AudioSourceInfo* sourceInfoPtr = reg_audio_sources.at(source_name);
+
+    //if y is different from current audio source position y
+    if(sourceInfoPtr->position_vector[POSITION_INDEX::Y] != y)
+    {
+        sourceInfoPtr->position_vector[POSITION_INDEX::Y] = y; //assign x to listener position x
+        alSource3f(sourceInfoPtr->source, AL_POSITION, sourceInfoPtr->position_vector[POSITION_INDEX::X],
+                                                           sourceInfoPtr->position_vector[POSITION_INDEX::Y],
+                                                            sourceInfoPtr->position_vector[POSITION_INDEX::Z]);
+    }
+}
+
+qreal OpenAlSoftAudioEngine::getAudioSourcePositionY(QString &source_name)
+{
+    AudioSourceInfo* sourceInfoPtr = reg_audio_sources.at(source_name);
+    return sourceInfoPtr->position_vector[POSITION_INDEX::Y];
+}
+
+void OpenAlSoftAudioEngine::setAudioSourcePositionZ(QString &source_name, qreal z)
+{
+    AudioSourceInfo* sourceInfoPtr = reg_audio_sources.at(source_name);
+
+    //if z is different from current audio source position z
+    if(sourceInfoPtr->position_vector[POSITION_INDEX::Z] != z)
+    {
+        sourceInfoPtr->position_vector[POSITION_INDEX::Z] = z; //assign x to listener position x
+        alSource3f(sourceInfoPtr->source, AL_POSITION, sourceInfoPtr->position_vector[POSITION_INDEX::X],
+                                                           sourceInfoPtr->position_vector[POSITION_INDEX::Y],
+                                                            sourceInfoPtr->position_vector[POSITION_INDEX::Z]);
+    }
+}
+
+qreal OpenAlSoftAudioEngine::getAudioSourcePositionZ(QString &source_name)
+{
+    AudioSourceInfo* sourceInfoPtr = reg_audio_sources.at(source_name);
+    return sourceInfoPtr->position_vector[POSITION_INDEX::Z];
+}
+
 //HRTF
 //define functions for hrtf
 static LPALCGETSTRINGISOFT alcGetStringiSOFT;
@@ -318,6 +414,33 @@ void OpenAlSoftAudioEngine::setTarget(const QQmlProperty &prop){ m_targetPropert
 
 void OpenAlSoftAudioEngine::playSound()
 {
+    //for now just play 1st sound source in m_sources vector
+    playSoundSource(m_sources.at(0).name);
+}
+
+void OpenAlSoftAudioEngine::playSoundSource(QString &source_name)
+{
+    AudioSourceInfo* sourceInfoPtr = reg_audio_sources.at(source_name);
+    ALenum state;
+
+    alSourcePlay(sourceInfoPtr->source);
+    do {
+           //make program go to sleep for 10^7 ns = 10 ms
+           int ms = 10;
+           #ifdef Q_OS_WIN
+               Sleep(uint(ms));
+           #else
+               struct timespec ts = { ms / 1000, (ms % 1000) * 1000 * 1000 };
+               nanosleep(&ts, NULL);
+           #endif
+           //al_nssleep(10000000);
+           alGetSourcei(sourceInfoPtr->source, AL_SOURCE_STATE, &state);
+
+           /* Get the source offset. */
+           //alGetSourcef(source, AL_SEC_OFFSET, &offset);
+           //printf("\rOffset: %f  ", offset);
+           //fflush(stdout);
+   } while(alGetError() == AL_NO_ERROR && state == AL_PLAYING);
 }
 
 void OpenAlSoftAudioEngine::loadSound(const QString& filename)
@@ -330,8 +453,6 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
     ALsizei slen; //Size in bytes of the buffer data.
     ALsizei frequency; //Sample rate of the buffer data
 
-    //QAudioDecoder audioDecoder; //audio decoder to extract data from audio sample
-    //QVector <QAudioBuffer> audioBufferRead; //variable  to store audio buffer that is read from audio decoder
 
     /* Open the audio file */
     //Check if file exists
@@ -349,14 +470,6 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
         /* The SF_INFO struct must be initialized before using it.
         */
         memset (&sfinfo, 0, sizeof (sfinfo)) ;
-
-        /* Here's where we open the input file. We pass sf_open the file name and
-        ** a pointer to an SF_INFO struct.
-        ** On successful open, sf_open returns a SNDFILE* pointer which is used
-        ** for all subsequent operations on that file.
-        ** If an error occurs during sf_open, the function returns a NULL pointer.
-        **
-        */
 
         if (! (infile = sf_open (infilename, SFM_READ, &sfinfo)))
         {
@@ -446,24 +559,26 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
         buffer = 0; //initialize temp buffer
         alGenBuffers(1, &buffer);//request 1 buffer
         //set buffer data
-        //alBufferData(buffer, format, data, slen, frequency);
         alBufferData(buffer, format,&data.front(), data.size() * sizeof(uint16_t), sfinfo.samplerate);
+
+        //free data from reading audio into buffer
+        data.clear();
 
         /* Check if an error occured, and clean up if so. */
         err = alGetError();
         if(err != AL_NO_ERROR)
         {
-            //fprintf(stderr, "OpenAL Error: %s\n", alGetString(err));
             loadSound_Results.append("OpenAL Error in loading sound: ");
             loadSound_Results.append(alGetString(err));
             loadSound_Results.append("\n");
             if(buffer && alIsBuffer(buffer)){alDeleteBuffers(1, &buffer);}
             return;
         }
-        loadSound_Results.append("Loaded "); loadSound_Results.append(filename); loadSound_Results.append(" successfully! \n");
-        m_buffer = buffer; //assign temp buffer to m_buffer
 
-        /* Close input files. */
+        loadSound_Results.append("Loaded "); loadSound_Results.append(filename); loadSound_Results.append(" successfully! \n");
+        m_buffers.push_back(buffer);//assign temp buffer to m_buffer
+
+        /* Close input file */
         sf_close (infile);
         return;
 	}
@@ -479,7 +594,13 @@ void OpenAlSoftAudioEngine::loadSound(const QString& filename)
 
 void OpenAlSoftAudioEngine::clear_LoadSoundResults(){loadSound_Results.clear();}
 
-void OpenAlSoftAudioEngine::error_check(QString location_str)
+void OpenAlSoftAudioEngine::deleteSource(QString &source_name)
+{
+    AudioSourceInfo* sourceInfoPtr = reg_audio_sources.at(source_name);
+    alDeleteSources(sourceInfoPtr->genIndex, &sourceInfoPtr->source);
+}
+
+void OpenAlSoftAudioEngine::openal_error_check(QString location_str)
 {
     /* Check if an error occured, and clean up if so. */
     test_error_flag = alGetError();

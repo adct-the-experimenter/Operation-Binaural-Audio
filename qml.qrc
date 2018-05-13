@@ -3,5 +3,7 @@
         <file>main.qml</file>
         <file>MainForm.ui.qml</file>
         <file>CustomFileDialog.qml</file>
+        <file>SphereEntity.qml</file>
+        <file>VASCameraController.qml</file>
     </qresource>
 </RCC>

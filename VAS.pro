@@ -1,11 +1,12 @@
 TEMPLATE = app
 
-QT += qml quick multimedia
+QT += qml quick 3dcore 3drender 3dinput 3dextras 3dquickextras gui
 
 CONFIG += c++11 g
 
 SOURCES += main.cpp \
-    openalsoftaudioengine.cpp
+    openalsoftaudioengine.cpp \
+    interface3dengine.cpp
 
 RESOURCES += qml.qrc
 
@@ -17,7 +18,8 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-HEADERS += openalsoftaudioengine.h
+HEADERS += openalsoftaudioengine.h \
+    interface3dengine.h
 
 LIBS += -L/usr/local/lib -lopenal -lsndfile
 
