@@ -100,8 +100,7 @@ ApplicationWindow
     //Interface3DEngine QML Object
     Interface3DEngine
     {
-        id:interfaceengine        
-
+        id:interfaceengine
     }
 
     Rectangle
@@ -111,13 +110,13 @@ ApplicationWindow
         y:mainform.area_for_3drender.y
         width: mainform.area_for_3drender.width
         height: mainform.area_for_3drender.height
-        color: "#ffffff"
+        color: "white"
 
         // 3D scene
         Scene3D
         {
             id: scene3d
-            aspects: ["render", "input","logic"]
+            aspects: ["input","logic","render"]
             anchors.fill: parent
             anchors.margins: 10
             focus: true
@@ -146,6 +145,128 @@ ApplicationWindow
 
                 components:
                 [
+                    InputSettings
+                    {
+                        KeyboardDevice {
+                            id: keyboardDevice
+                        }
+
+                        KeyboardHandler
+                        {
+                            sourceDevice: keyboardDevice
+                        }
+
+                        MouseDevice {
+                            id: mouseDevice
+                            sensitivity: camera_controller.mouseSensitivity
+                        }
+
+                        MouseHandler {
+                            sourceDevice: mouseDevice
+                        }
+
+                        LogicalDevice {
+                            // The LogicalDevice, the "managed flag bits"
+
+                            enabled: true
+                            actions: [
+                                Action {
+                                    // Generally with ActionInput, for button pressing
+                                    // including single key press, key chord and key sequence
+
+                                    id: lookAction
+                                    ActionInput {
+                                        sourceDevice: mouseDevice
+                                        buttons: [MouseEvent.LeftButton]
+                                    }
+                                },
+                                Action {
+                                    id: orbitAction
+                                    ActionInput {
+                                        sourceDevice: mouseDevice
+                                        buttons: [MouseEvent.RightButton]
+                                    }
+                                },
+                                Action {
+                                    id: moveAction
+                                    ActionInput {
+                                        sourceDevice: mouseDevice
+                                        buttons: [MouseEvent.MiddleButton]
+                                    }
+                                },
+                                Action {
+                                    id: leftMove
+                                    ActionInput {
+                                        sourceDevice: keyboardDevice
+                                        buttons: [Qt.Key_Left, Qt.Key_A]
+                                    }
+                                },
+                                Action {
+                                    id: rightMove
+                                    ActionInput {
+                                        sourceDevice: keyboardDevice
+                                        buttons: [Qt.Key_Right, Qt.Key_D]
+                                    }
+                                },
+                                Action {
+                                    id: upMove
+                                    ActionInput {
+                                        sourceDevice: keyboardDevice
+                                        buttons: [Qt.Key_Up, Qt.Key_W]
+                                    }
+                                },
+                                Action {
+                                    id: downMove
+                                    ActionInput {
+                                        sourceDevice: keyboardDevice
+                                        buttons: [Qt.Key_Down, Qt.Key_S]
+                                    }
+                                },
+                                Action {
+                                    id: fineModifier
+                                    ActionInput {
+                                        sourceDevice: keyboardDevice
+                                        buttons: [Qt.Key_Shift]
+                                    }
+                                }
+                            ]
+                            axes: [
+                                Axis {
+                                    // Generally with AxisInput, for analog device value changing
+                                    // usually for mouses and joysticks
+
+                                    id: xAxis
+                                    AnalogAxisInput {
+                                        sourceDevice: mouseDevice
+                                        axis: MouseDevice.X
+                                    }
+                                },
+                                Axis {
+                                    id: yAxis
+                                    AnalogAxisInput {
+                                        sourceDevice: mouseDevice
+                                        axis: MouseDevice.Y
+                                    }
+                                },
+                                Axis {
+                                    id: wAxis
+                                    AnalogAxisInput {
+                                        sourceDevice: mouseDevice
+                                        axis: MouseDevice.WheelY
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    FrameAction
+                    {
+                        onTriggered:
+                        {
+                            console.log("camera position",mainCamera.position);
+                            camera_controller.cameraControllerLogic(upMove.active,downMove.active,rightMove.active,leftMove.active,dt);
+                        }
+                    },
+
                     RenderSettings
                     {
                         activeFrameGraph: ForwardRenderer {
@@ -153,15 +274,6 @@ ApplicationWindow
                             clearColor: "transparent"
                             }
                         renderPolicy: RenderSettings.OnDemand
-                    },
-
-                    InputSettings {},
-                    FrameAction
-                    {
-                        onTriggered:
-                        {
-                            camera_controller.cameraControllerLogic();
-                        }
                     }
 
                 ]

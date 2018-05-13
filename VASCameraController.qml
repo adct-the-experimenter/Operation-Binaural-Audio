@@ -21,7 +21,7 @@ Entity {
 
     property Entity camera
     property real mouseSensitivity: .5 // Units.dp
-    property real cameraSpeed: 5.
+    property real cameraSpeed: 2
 
     QtObject {
         id: d
@@ -29,137 +29,26 @@ Entity {
         property real fineScale: fineModifier.active ? .1 : 1. // with shift key
         property real mouseSensitivity: root.mouseSensitivity*fineScale
         property real cameraSpeed: root.cameraSpeed*fineScale
-        property bool lookActionActived: false
-        property bool orbitActionActived: false
         property bool moveActionActived: false
     }
 
-    KeyboardDevice {
-        id: keyboardDevice
-    }
 
-    KeyboardHandler
+
+    function cameraControllerLogic(upMove,downMove,rightMove,leftMove,dt)
     {
-        sourceDevice: keyboardDevice
-    }
 
-    MouseDevice {
-        id: mouseDevice
-        sensitivity: d.mouseSensitivity
-    }
+        var position = root.camera.position;
 
-    MouseHandler {
-        sourceDevice: mouseDevice
-    }
+        if (upMove)
+            position = position + root.camera.frontVector*(d.cameraSpeed * dt);
+        if (downMove)
+            position = position + -1.0*root.camera.frontVector*(d.cameraSpeed * dt);
+        if (rightMove)
+            position = position + root.camera.rightVector*(d.cameraSpeed * dt);
+        if (leftMove)
+            position = position + -1.0*root.camera.rightVector*(d.cameraSpeed * dt);
 
-    LogicalDevice {
-        // The LogicalDevice, the "managed flag bits"
-
-        enabled: true
-        actions: [
-            Action {
-                // Generally with ActionInput, for button pressing
-                // including single key press, key chord and key sequence
-
-                id: lookAction
-                ActionInput {
-                    sourceDevice: mouseDevice
-                    buttons: [MouseEvent.LeftButton]
-                }
-            },
-            Action {
-                id: orbitAction
-                ActionInput {
-                    sourceDevice: mouseDevice
-                    buttons: [MouseEvent.RightButton]
-                }
-            },
-            Action {
-                id: moveAction
-                ActionInput {
-                    sourceDevice: mouseDevice
-                    buttons: [MouseEvent.MiddleButton]
-                }
-            },
-            Action {
-                id: leftMove
-                ActionInput {
-                    sourceDevice: keyboardDevice
-                    buttons: [Qt.Key_Left, Qt.Key_A]
-                }
-            },
-            Action {
-                id: rightMove
-                ActionInput {
-                    sourceDevice: keyboardDevice
-                    buttons: [Qt.Key_Right, Qt.Key_D]
-                }
-            },
-            Action {
-                id: upMove
-                ActionInput {
-                    sourceDevice: keyboardDevice
-                    buttons: [Qt.Key_Up, Qt.Key_W]
-                }
-            },
-            Action {
-                id: downMove
-                ActionInput {
-                    sourceDevice: keyboardDevice
-                    buttons: [Qt.Key_Down, Qt.Key_S]
-                }
-            },
-            Action {
-                id: fineModifier
-                ActionInput {
-                    sourceDevice: keyboardDevice
-                    buttons: [Qt.Key_Shift]
-                }
-            }
-        ]
-        axes: [
-            Axis {
-                // Generally with AxisInput, for analog device value changing
-                // usually for mouses and joysticks
-
-                id: xAxis
-                AnalogAxisInput {
-                    sourceDevice: mouseDevice
-                    axis: MouseDevice.X
-                }
-            },
-            Axis {
-                id: yAxis
-                AnalogAxisInput {
-                    sourceDevice: mouseDevice
-                    axis: MouseDevice.Y
-                }
-            },
-            Axis {
-                id: wAxis
-                AnalogAxisInput {
-                    sourceDevice: mouseDevice
-                    axis: MouseDevice.WheelY
-                }
-            }
-        ]
-    }
-
-    function cameraControllerLogic()
-    {
-            var position = root.camera.position;
-
-            if (upMove.active)
-                //position = position.plus(root.camera.frontVector.times(d.cameraSpeed * dt));
-                console.log("up key pressed! \n");
-            if (downMove.active)
-                position = position.minus(root.camera.frontVector.times(d.cameraSpeed * dt));
-            if (rightMove.active)
-                position = position.plus(root.camera.rightVector.times(d.cameraSpeed * dt));
-            if (leftMove.active)
-                position = position.minus(root.camera.rightVector.times(d.cameraSpeed * dt));
-
-            root.camera.position = position;
+        root.camera.position = position;
     }
 }
 
