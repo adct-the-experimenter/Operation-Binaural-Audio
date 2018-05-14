@@ -140,7 +140,8 @@ ApplicationWindow
                 VASCameraController
                 {
                     id:camera_controller
-                    camera: mainCamera
+                    cameraToControl: mainCamera
+                    cameraSpeed:appwindow.width / 20
                 }
 
                 components:
@@ -262,8 +263,9 @@ ApplicationWindow
                     {
                         onTriggered:
                         {
-                            console.log("camera position",mainCamera.position);
-                            camera_controller.cameraControllerLogic(upMove.active,downMove.active,rightMove.active,leftMove.active,dt);
+                            //console.log("camera position",mainCamera.position);
+                            //camera_controller.cameraControllerLogic(upMove.active,downMove.active,rightMove.active,leftMove.active,dt);
+                            //what to do every frame
                         }
                     },
 
