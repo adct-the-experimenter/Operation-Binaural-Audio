@@ -13,45 +13,51 @@ import QtQuick.Window 2.2
 
 
 
-    Entity
+Entity
+{
+    id: root
+    property real x: 20
+    property real y: 0
+    property real z: 0
+    property real radius: 3
+    property color color: "silver"
+    property Transform transform: sphereTransform
+
+    components: [ sphereMesh, material, sphereTransform ]
+
+    function placeSphere(newX,newY,newZ)
     {
-        id: sphereEntity
-        property real x: 20
-        property real y: 0
-        property real z: 0
+        x = newX;
+        y = newY;
+        z = newZ;
+    }
 
-        components: [ sphereMesh, material, sphereTransform ]
+    SphereMesh
+    {
+        id: sphereMesh
+        radius: root.radius
+    }
 
-        function placeSphere(newX,newY,newZ)
+    Transform
+    {
+        id: sphereTransform
+        matrix:
         {
-            x = newX;
-            y = newY;
-            z = newZ;
-        }
-
-        SphereMesh
-        {
-            id: sphereMesh
-            radius: 3
-        }
-
-        Transform
-        {
-            id: sphereTransform
-            matrix:
-            {
-                var m = Qt.matrix4x4();
-                m.rotate(0.0, Qt.vector3d(0, 1, 0));
-                m.translate(Qt.vector3d(x, y, z));
-                return m;
-            }
-        }
-
-        PhongMaterial
-        {
-            id: material
+            var m = Qt.matrix4x4();
+            m.rotate(0.0, Qt.vector3d(0, 1, 0));
+            m.translate(Qt.vector3d(x, y, z));
+            return m;
         }
     }
+
+    GoochMaterial
+    {
+        id: material
+        cool: "black"
+        warm:root.color
+        specular:"black"
+    }
+}
 
 
 

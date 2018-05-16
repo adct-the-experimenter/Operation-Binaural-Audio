@@ -110,7 +110,7 @@ ApplicationWindow
         y:mainform.area_for_3drender.y
         width: mainform.area_for_3drender.width
         height: mainform.area_for_3drender.height
-        color: "white"
+        color: "transparent"
 
         // 3D scene
         Scene3D
@@ -118,7 +118,6 @@ ApplicationWindow
             id: scene3d
             aspects: ["input","logic","render"]
             anchors.fill: parent
-            anchors.margins: 10
             focus: true
 
             Entity
@@ -129,7 +128,7 @@ ApplicationWindow
                 {
                     id: mainCamera
                     projectionType: CameraLens.PerspectiveProjection
-                    fieldOfView: 45
+                    fieldOfView: 60
                     nearPlane : 0.1
                     farPlane : 1000.0
                     position: Qt.vector3d( 0.0, 0.0, 40.0 )
@@ -142,6 +141,7 @@ ApplicationWindow
                     id:camera_controller
                     cameraToControl: mainCamera
                     cameraSpeed:appwindow.width / 20
+                    panCameraBool: panCamera.active
                 }
 
                 components:
@@ -152,18 +152,20 @@ ApplicationWindow
                             id: keyboardDevice
                         }
 
-                        KeyboardHandler
-                        {
-                            sourceDevice: keyboardDevice
-                        }
-
                         MouseDevice {
                             id: mouseDevice
                             sensitivity: camera_controller.mouseSensitivity
                         }
 
                         MouseHandler {
+                            id:mouseHandler
                             sourceDevice: mouseDevice
+
+                            property int posX
+                            property int posY
+
+                            onPressed: {posX = mouse.x;posY = mouse.y;}
+
                         }
 
                         LogicalDevice {
@@ -224,10 +226,10 @@ ApplicationWindow
                                     }
                                 },
                                 Action {
-                                    id: fineModifier
+                                    id: panCamera
                                     ActionInput {
                                         sourceDevice: keyboardDevice
-                                        buttons: [Qt.Key_Shift]
+                                        buttons: [Qt.Key_Control]
                                     }
                                 }
                             ]
@@ -259,21 +261,23 @@ ApplicationWindow
                             ]
                         }
                     },
+
                     FrameAction
                     {
                         onTriggered:
                         {
-                            //console.log("camera position",mainCamera.position);
-                            //camera_controller.cameraControllerLogic(upMove.active,downMove.active,rightMove.active,leftMove.active,dt);
                             //what to do every frame
+                            audio_source1.audioSourceLogic();
                         }
                     },
 
                     RenderSettings
                     {
-                        activeFrameGraph: ForwardRenderer {
-                            camera: mainCamera
-                            clearColor: "transparent"
+                        activeFrameGraph:
+                            ForwardRenderer
+                            {
+                                camera: mainCamera
+                                clearColor: "white"
                             }
                         renderPolicy: RenderSettings.OnDemand
                     }
@@ -281,7 +285,15 @@ ApplicationWindow
                 ]
 
                 //entity to render
-                SphereEntity { id:spherelistener; x:0; y:0; z:0; }
+                SphereEntity { id:spherelistener; x:0; y:0; z:0; color:"blue" }
+                GraphicalAudioSource
+                {
+                    id:audio_source1; x:0; y:-20; z:10;
+                    mouseDevice: mouseDevice
+                    camera: mainCamera
+                    renderAreaWidth: render_rect.width
+                    renderAreaHeight: render_rect.height
+                }
 
             }
 

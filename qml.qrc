@@ -5,5 +5,7 @@
         <file>CustomFileDialog.qml</file>
         <file>SphereEntity.qml</file>
         <file>VASCameraController.qml</file>
+        <file>GraphicalAudioSource.qml</file>
+        <file>MenuGraphicalAudioSource.qml</file>
     </qresource>
 </RCC>
