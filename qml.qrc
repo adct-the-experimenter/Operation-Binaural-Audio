@@ -7,5 +7,6 @@
         <file>VASCameraController.qml</file>
         <file>GraphicalAudioSource.qml</file>
         <file>MenuGraphicalAudioSource.qml</file>
+        <file>PositionEditingInterface.qml</file>
     </qresource>
 </RCC>

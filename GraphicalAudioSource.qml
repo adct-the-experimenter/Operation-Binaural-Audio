@@ -66,6 +66,7 @@ Entity
     MenuGraphicalAudioSource
     {
         id:menu
+        visible: false
     }
 
     Item
@@ -146,27 +147,38 @@ Entity
     {
         switch(logic_event.currentEvent)
         {
-            case event_enum.none:{/*do nothing*/break;}
+            case event_enum.none:
+            {
+                menu.visible = false;
+                menu.menuActive = false;
+                break;
+            }
             //if cursor right click on sphere
             case event_enum.rightclickonspherepress:
             {
-                menu.popup();
+                if(!menu.menuActive){menu.popup();} //prevents repeating popup calls
+                menu.menuActive = true;
                 break;
             }
             //if cursor right click on sphere and held
             case event_enum.rightclickonspherepresshold:
             {
-                menu.popup();
+                if(!menu.menuActive){menu.popup();} //prevents repeating popup calls
+                menu.menuActive = true;
                 break;
             }
             //if cursor left click on sphere
             case event_enum.leftclickonspherepress:
             {
+                menu.menuActive = false;
+                menu.visible = false;
                 break;
             }
             //if cursor left click on sphere and held
             case event_enum.leftclickonspherepresshold:
             {
+                menu.menuActive = false;
+                menu.visible = false;
                 break;
             }
 
