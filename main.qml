@@ -103,6 +103,14 @@ ApplicationWindow
         id:interfaceengine
     }
 
+    AttributesEditor
+    {
+        id:attributes_editor
+        area_for_editor: mainform.attributes_section
+        focus: false
+
+    }
+
     Rectangle
     {
         id:render_rect
@@ -146,6 +154,7 @@ ApplicationWindow
 
                 components:
                 [
+                    //input
                     InputSettings
                     {
                         KeyboardDevice {
@@ -181,20 +190,6 @@ ApplicationWindow
                                     ActionInput {
                                         sourceDevice: mouseDevice
                                         buttons: [MouseEvent.LeftButton]
-                                    }
-                                },
-                                Action {
-                                    id: orbitAction
-                                    ActionInput {
-                                        sourceDevice: mouseDevice
-                                        buttons: [MouseEvent.RightButton]
-                                    }
-                                },
-                                Action {
-                                    id: moveAction
-                                    ActionInput {
-                                        sourceDevice: mouseDevice
-                                        buttons: [MouseEvent.MiddleButton]
                                     }
                                 },
                                 Action {
@@ -261,7 +256,7 @@ ApplicationWindow
                             ]
                         }
                     },
-
+                    //logic
                     FrameAction
                     {
                         onTriggered:
@@ -270,7 +265,7 @@ ApplicationWindow
                             audio_source1.audioSourceLogic();
                         }
                     },
-
+                    //render
                     RenderSettings
                     {
                         activeFrameGraph:
@@ -280,6 +275,7 @@ ApplicationWindow
                                 clearColor: "white"
                             }
                         renderPolicy: RenderSettings.OnDemand
+
                     }
 
                 ]
@@ -293,6 +289,14 @@ ApplicationWindow
                     camera: mainCamera
                     renderAreaWidth: render_rect.width
                     renderAreaHeight: render_rect.height
+
+                    onPositionEditorCalled:
+                    {
+                        attributes_editor.graphicalAudioSource = audio_source1;
+                        attributes_editor.callPositionEditor();
+                    }
+
+
                 }
 
             }

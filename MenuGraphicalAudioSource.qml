@@ -9,25 +9,38 @@ Menu
     property bool menuActive: false //used to prevent repeating calls to popup menu
     property bool loopingEnabled:false //indicate if audio source can be looped
 
+    signal xPositionChanged(real x);
+    signal yPositionChanged(real y);
+    signal zPositionChanged(real z);
+    signal positionEditorCalled();
+
+    MenuItem
+    {
+        id:move_menuitem
+        text:"Move"
+
+        onTriggered:
+        {
+
+        }
+    }
+
     MenuItem
     {
         id:position_menuitem
         text:"Position..."
 
+
         onTriggered:
         {
-            position_editor.visible=true;
-            position_editor.focus=true;
+            //var component = Qt.createComponent("PositionEditingInterface.qml");
+            //var positionEditor = component.createObject(root);
+            positionEditorCalled();
         }
+
     }
 
-    PositionEditingInterface
-    {
-        id:position_editor
-        visible: false
 
-        onDoneEditing:{position_editor.visible=false;}
-    }
 
 
     MenuItem

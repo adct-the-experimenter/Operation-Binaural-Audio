@@ -11,6 +11,8 @@ Item {
     id: item1
     width: 640
     height: 480
+    property alias attribute_show_rect: attribute_show_rect
+    property alias attributes_section: attributes_section
     property alias area_for_3drender: area_for_3drender
     property alias bindSourceButton: bindSourceButton
     property alias loadButton: loadButton
@@ -164,5 +166,47 @@ Item {
         anchors.bottom: hrtfTestButton.top
         anchors.bottomMargin: 20
         visible: false
+    }
+
+    Rectangle {
+        id: attributes_section
+        x: 517
+        y: 32
+        width: 120
+        height: 300
+        color: "#dcdada"
+        visible: false
+        anchors.right: parent.right
+        anchors.rightMargin: 2
+        border.width: 1
+
+        Text {
+            id: attributes_text
+            x: 0
+            y: 0
+            width: 120
+            height: 15
+            text: qsTr("Attributes")
+            horizontalAlignment: Text.AlignHCenter
+            font.pixelSize: 12
+        }
+
+        Rectangle {
+            id: attribute_show_rect
+            x: 110
+            y: 290
+            width: 100
+            height: 100
+            color: "#f9f8f8"
+            z: 1
+            anchors.top: attributes_section.bottom
+            anchors.topMargin: -10
+            anchors.bottom: attributes_section.top
+            anchors.bottomMargin: -10
+            anchors.left: attributes_section.right
+            anchors.leftMargin: -10
+            anchors.right: attributes_section.left
+            anchors.rightMargin: -10
+        }
     }
 }

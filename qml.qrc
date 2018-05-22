@@ -8,5 +8,6 @@
         <file>GraphicalAudioSource.qml</file>
         <file>MenuGraphicalAudioSource.qml</file>
         <file>PositionEditingInterface.qml</file>
+        <file>AttributesEditor.qml</file>
     </qresource>
 </RCC>

@@ -21,6 +21,9 @@ Entity
     property int renderAreaWidth
     property int renderAreaHeight
 
+    signal positionEditorCalled();
+
+
     SphereEntity
     {
         id:sphere; x:root.x; y:root.y; z:root.z; color:"gray";
@@ -63,11 +66,17 @@ Entity
 
     }
 
-    MenuGraphicalAudioSource
+    Item
     {
-        id:menu
-        visible: false
+        MenuGraphicalAudioSource
+        {
+            id:menu
+            visible: false
+            onPositionEditorCalled: {root.positionEditorCalled();}
+        }
     }
+
+
 
     Item
     {

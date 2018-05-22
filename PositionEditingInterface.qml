@@ -1,33 +1,220 @@
-import QtQuick 2.0
-import QtQuick.Controls 1.5
+import QtQuick 2.5
+import QtQuick.Controls 1.4
 import QtQuick.Dialogs 1.2
 
-Item
+import QtQuick.Window 2.2
+
+Rectangle
 {
     id:root
     property real position_x: 0
     property real position_y: 0
     property real position_z: 0
 
+    signal positionChanged(real x, real y, real z);
 
-    //signal to return when finished editing
-    signal doneEditing();
-    property alias ztextField: ztextField
+    signal editorClose();
 
-    anchors.fill: parent
-
-    visible: true
+    //Validator to use for text fields
+    DoubleValidator
+    {
+        id:double_vaildator
+        bottom: -20; top: 20; decimals: 1;
+    }
 
     Rectangle
     {
-        id: rectangle1
+        id: rectangle
+        x: 0
+        y: 0
+        width: 100
+        height: 200
+        visible: true
+        Text
+        {
+            id: position_title
+            text: qsTr("Position")
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 10
+            font.pixelSize: 12
+        }
 
-        x:200
-        y:10
-        width: 287
-        height: 201
-        color: "#f5f3f3"
-        opacity: 1
+        Rectangle
+        {
+            id: x_rect
+            height:28;
+            anchors.left: parent.left
+            anchors.leftMargin: 0
+            anchors.right: parent.right
+            anchors.rightMargin: 0
+            anchors.top: position_title.bottom
+            anchors.topMargin: 5
+
+            TextField {
+                id: xtextField
+                x: 50
+                y: 0
+                width: 50
+                height: 20
+                text: position_x
+                anchors.right: parent.right
+                anchors.rightMargin: 0
+                validator: double_vaildator
+
+                //If input accepted
+                onEditingFinished:
+                {
+                    //parse number from text and assign it to temp_x
+                    temp_values.temp_x = parseFloat(xtextField.text);
+                }
+            }
+
+            Text {
+                id: xtext
+                x: 0
+                y: 0
+                width: 50
+                height: 22
+                text: qsTr("x:")
+                anchors.right: parent.right
+                anchors.rightMargin: 20
+                font.pixelSize: 12
+            }
+
+
+        }
+
+
+        Rectangle
+        {
+            id:y_rect; height:28;
+            anchors.left: parent.left
+            anchors.leftMargin: 0
+            anchors.right: parent.right
+            anchors.rightMargin: 0
+            anchors.top: x_rect.bottom
+            anchors.topMargin: 5
+
+            TextField {
+                id: ytextField
+                x: 50
+                y: 0
+                width: 50
+                height: 20
+                text: position_y
+                validator: double_vaildator
+
+                //If input accepted
+                onEditingFinished:
+                {
+                    //parse number from text and assign it to temp_y
+                    temp_values.temp_y = parseFloat(ytextField.text);
+                }
+            }
+
+            Text {
+                id: ytext
+                x: 0
+                y: 0
+                width: 50
+                height: 22
+                text: qsTr("y:")
+                anchors.right: ytextField.right
+                anchors.rightMargin: 20
+                font.pixelSize: 12
+            }
+
+
+        }
+
+
+        Rectangle
+        {
+            id:z_rect; height:28;
+            anchors.right: parent.right
+            anchors.rightMargin: 0
+            anchors.left: parent.left
+            anchors.leftMargin: 0
+            anchors.top: y_rect.bottom
+            anchors.topMargin: 5
+
+            TextField {
+                id: ztextField
+                x: 50
+                y: 0
+                width: 50
+                height: 18
+                text: position_z
+                anchors.right: parent.right
+                anchors.rightMargin: 0
+                validator: double_vaildator
+
+                //If input accepted
+                onEditingFinished:
+                {
+                    //parse number from text and assign it to temp_z
+                    temp_values.temp_z = parseFloat(ztextField.text);
+                }
+            }
+
+            Text {
+                id: ztext
+                width: 50
+                height: 22
+                text: qsTr("z:")
+                anchors.right: parent.right
+                anchors.rightMargin: 20
+                font.pixelSize: 12
+            }
+
+
+        }
+
+
+        Button {
+            id: ok_button
+            text: qsTr("OK")
+            anchors.horizontalCenterOffset: 0
+            anchors.top: z_rect.bottom
+            anchors.topMargin: 5
+            anchors.horizontalCenter: parent.horizontalCenter
+            onClicked:
+            {
+                //save temporary value to final value of position
+                if(root.position_x != temp_values.temp_x)
+                {
+                    root.position_x = temp_values.temp_x;
+                    root.positionChanged(root.position_x,root.position_y,root.position_z);
+                }
+
+                if(root.position_y != temp_values.temp_y)
+                {
+                    root.position_y = temp_values.temp_y;
+                    root.positionChanged(root.position_x,root.position_y,root.position_z);
+                }
+
+                if(root.position_z != temp_values.temp_z)
+                {
+                    root.position_z = temp_values.temp_z;
+                    root.positionChanged(root.position_x,root.position_y,root.position_z);
+                }
+
+                root.editorClose();
+            }
+        }
+
+        Button
+        {
+            id: cancel_button
+            text: qsTr("Cancel")
+            anchors.horizontalCenterOffset: 0
+            anchors.top: ok_button.bottom
+            anchors.topMargin: 5
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            onClicked:{root.editorClose();}
+        }
 
         Item
         {
@@ -36,164 +223,8 @@ Item
             property real temp_y: 0
             property real temp_z: 0
         }
-
-        Row {
-            id: x_row
-            x: 164
-            y: 20
-            width: 200
-            height: 28
-            anchors.horizontalCenterOffset: 0
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 30
-
-            Text {
-                id: xtext
-                width: 50
-                height: 22
-                text: qsTr("x:")
-                font.pixelSize: 12
-            }
-
-            TextField {
-                id: xtextField
-                text: position_x
-                validator: DoubleValidator {bottom: -100; top: 100; decimals: 4;}
-
-                //If input accepted
-                onAccepted:
-                {
-                    //parse number from text and assign it to temp_x
-                    temp_values.temp_x = parseFloat(xtextField.text);
-                }
-            }
-
-
-        }
-
-        Row {
-            id: y_row
-            x: 164
-            y: 58
-            width: 200
-            height: 28
-            anchors.topMargin: 10
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.horizontalCenterOffset: 0
-            Text {
-                id: ytext
-                width: 50
-                height: 22
-                text: qsTr("y:")
-                font.pixelSize: 12
-            }
-
-            TextField {
-                id: ytextField
-                text: position_y
-                validator: DoubleValidator {
-                    top: 100
-                    bottom: -100
-                    decimals: 4
-                }
-
-                //If input accepted
-                onAccepted:
-                {
-                    //parse number from text and assign it to temp_y
-                    temp_values.temp_y = parseFloat(ytextField.text);
-                }
-            }
-            anchors.top: x_row.bottom
-        }
-
-        Row {
-            id: z_row
-            x: 164
-            y: 96
-            width: 200
-            height: 28
-            anchors.topMargin: 10
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.horizontalCenterOffset: 0
-
-            Text {
-                id: ztext
-                width: 50
-                height: 22
-                text: qsTr("z:")
-                font.pixelSize: 12
-            }
-
-            TextField {
-                id: ztextField
-                text: position_z
-                validator: DoubleValidator {
-                    top: 100
-                    decimals: 4
-                    bottom: -100
-                }
-
-                //If input accepted
-                onAccepted:
-                {
-                    //parse number from text and assign it to temp_z
-                    temp_values.temp_z = parseFloat(ztextField.text);
-                }
-            }
-
-            anchors.top: y_row.bottom
-        }
-
-        Row {
-            id: button_row
-            x: 150
-            y: 134
-            width: 228
-            height: 32
-            anchors.horizontalCenter: z_row.horizontalCenter
-            anchors.top: z_row.bottom
-            anchors.topMargin: 10
-
-            Button {
-                id: ok_button
-                x: -2
-                text: qsTr("OK")
-                onClicked:
-                {
-                    //save temporary value to final value of voltage supplied
-                    root.position_x = temp_values.temp_x;
-                    root.position_y = temp_values.temp_y;
-                    root.position_z = temp_values.temp_z;
-                    doneEditing(); //return doneEditing signal
-                }
-            }
-
-            Button
-            {
-                id: cancel_button
-                x: 126
-                text: qsTr("Cancel")
-
-                onClicked:{doneEditing();}
-            }
-
-        }
-
-        Text {
-            id: position_title
-            x: 121
-            y: 8
-            text: qsTr("Position")
-            font.pixelSize: 12
-        }
-
-
-
-
-
     }
+
 
 
 

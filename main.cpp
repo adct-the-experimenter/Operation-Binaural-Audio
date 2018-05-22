@@ -14,7 +14,6 @@ int main(int argc, char *argv[])
 {
 
     QGuiApplication app(argc, argv);
-
     /*
      * Might use later if needed.
     QSurfaceFormat format;
@@ -36,6 +35,7 @@ int main(int argc, char *argv[])
 
     QSurfaceFormat::setDefaultFormat(format);
     */
+
 
     QQmlApplicationEngine engine;
 
