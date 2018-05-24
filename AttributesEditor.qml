@@ -52,7 +52,6 @@ Item
             {
                 positionEditor.visible=false;
                 if(root.graphicalAudioSource != null){root.graphicalAudioSource = null;}
-                root.focus = false;
             }
             onPositionChanged:
             {
@@ -71,7 +70,6 @@ Item
 
     function callPositionEditor()
     {
-        root.focus=true;
         positionEditor.visible = true;
         if(root.graphicalAudioSource != null)
         {

@@ -108,8 +108,8 @@ ApplicationWindow
         id:attributes_editor
         area_for_editor: mainform.attributes_section
         focus: false
-
     }
+
 
     Rectangle
     {
@@ -120,6 +120,8 @@ ApplicationWindow
         height: mainform.area_for_3drender.height
         color: "transparent"
 
+
+
         // 3D scene
         Scene3D
         {
@@ -127,6 +129,8 @@ ApplicationWindow
             aspects: ["input","logic","render"]
             anchors.fill: parent
             focus: true
+
+
 
             Entity
             {
