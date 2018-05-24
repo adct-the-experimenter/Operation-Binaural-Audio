@@ -7,9 +7,9 @@ import QtQuick.Window 2.2
 Rectangle
 {
     id:root
-    property real position_x: 0
-    property real position_y: 0
-    property real position_z: 0
+    property real position_x
+    property real position_y
+    property real position_z
 
     signal positionChanged(real x, real y, real z);
 
@@ -179,27 +179,33 @@ Rectangle
             anchors.top: z_rect.bottom
             anchors.topMargin: 5
             anchors.horizontalCenter: parent.horizontalCenter
+
+            property bool valueChange: false
+
             onClicked:
             {
+                valueChange = false;
+
                 //save temporary value to final value of position
                 if(root.position_x != temp_values.temp_x)
                 {
                     root.position_x = temp_values.temp_x;
-                    root.positionChanged(root.position_x,root.position_y,root.position_z);
+                    valueChange = true;
                 }
 
                 if(root.position_y != temp_values.temp_y)
                 {
                     root.position_y = temp_values.temp_y;
-                    root.positionChanged(root.position_x,root.position_y,root.position_z);
+                    valueChange = true;
                 }
 
                 if(root.position_z != temp_values.temp_z)
                 {
                     root.position_z = temp_values.temp_z;
-                    root.positionChanged(root.position_x,root.position_y,root.position_z);
+                    valueChange = true;
                 }
 
+                if(valueChange){positionChanged(temp_values.temp_x,temp_values.temp_y,temp_values.temp_z)};
                 root.editorClose();
             }
         }
@@ -219,9 +225,9 @@ Rectangle
         Item
         {
             id:temp_values
-            property real temp_x: 0
-            property real temp_y: 0
-            property real temp_z: 0
+            property real temp_x: root.position_x
+            property real temp_y: root.position_y
+            property real temp_z: root.position_z
         }
     }
 

@@ -57,6 +57,7 @@ Item
             {
                 if(root.graphicalAudioSource != null)
                 {
+                    console.log("new x,y,z:",x,y,z);
                     root.graphicalAudioSource.x = x;
                     root.graphicalAudioSource.y = y;
                     root.graphicalAudioSource.z = z;
@@ -76,6 +77,7 @@ Item
             positionEditor.position_x = root.graphicalAudioSource.x;
             positionEditor.position_y = root.graphicalAudioSource.y;
             positionEditor.position_z = root.graphicalAudioSource.z;
+            console.log("position editor input x,y,z:",positionEditor.position_x,positionEditor.position_y,positionEditor.position_z);
         }
         else{console.log("audio source property is null! Set before calling position editor.\n");}
 
