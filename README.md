@@ -3,4 +3,6 @@ Virtual Audio System. This is an audio application that produces sound in 3D on 
 
 # Libraries needed:
 - Qt 5.9 and later
+- Qt 3d
+- Qt quick
 - libsndfile
