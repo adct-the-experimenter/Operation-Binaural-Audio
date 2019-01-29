@@ -2,12 +2,12 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>MainForm.ui.qml</file>
-        <file>CustomFileDialog.qml</file>
         <file>SphereEntity.qml</file>
         <file>VASCameraController.qml</file>
         <file>GraphicalAudioSource.qml</file>
         <file>MenuGraphicalAudioSource.qml</file>
         <file>PositionEditingInterface.qml</file>
         <file>AttributesEditor.qml</file>
+        <file>SoundFileOpener.qml</file>
     </qresource>
 </RCC>

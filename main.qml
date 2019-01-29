@@ -32,8 +32,7 @@ ApplicationWindow
                 text: qsTr("&Open")
                 onTriggered:
                 {
-                    customFileDialog.mode = "OpenSoundFile";
-                    customFileDialog.open();
+                    soundFileOpener.openFile();
                 }
             }
             MenuItem {
@@ -44,9 +43,15 @@ ApplicationWindow
     }
 
     //Object to help open files
-    CustomFileDialog
+    SoundFileOpener
     {
-        id:customFileDialog
+        id:soundFileOpener
+
+        function openFile()
+        {
+            soundFileOpener.mode = "OpenSoundFile";
+            soundFileOpener.open();
+        }
     }
 
     //QTObject variable to display position
@@ -71,7 +76,7 @@ ApplicationWindow
     QtObject
     {
         id:sound_data
-        property string sound_filename: customFileDialog.sound_filepath
+        property string sound_filename: soundFileOpener.sound_filepath
     }
 
     //Message Dialog entity to display messages
